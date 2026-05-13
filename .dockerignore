@@ -1,0 +1,17 @@
+# Dependencies and build outputs
+node_modules/
+.next/
+out/
+
+# Local env and logs
+.env
+.env.*
+*.log
+
+# VCS / IDE
+.git/
+.idea/
+.vscode/
+
+# Keep Docker context minimal
+docker-compose*.yml
