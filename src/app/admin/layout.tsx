@@ -32,9 +32,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return null;
   }
 
-  return (
-    <div className="min-h-screen bg-[#0D1117] text-white">
-      {children}
-    </div>
-  );
+  console.log(1323333);
+
+  return <div className="min-h-screen bg-[#0D1117] text-white">{children}</div>;
 }
