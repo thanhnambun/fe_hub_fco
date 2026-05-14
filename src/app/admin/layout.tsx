@@ -9,16 +9,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { profile, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
 
-  const isAdmin = profile?.roles?.includes("ROLE_ADMIN");
+  const isAdminOrStaff = profile?.roles?.some((role) =>
+    ["ROLE_ADMIN", "ROLE_STAFF"].includes(role),
+  );
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       router.replace("/auth/login");
     }
-    if (!isLoading && isAuthenticated && !isAdmin) {
+    if (!isLoading && isAuthenticated && !isAdminOrStaff) {
       router.replace("/");
     }
-  }, [isLoading, isAuthenticated, isAdmin, router]);
+  }, [isLoading, isAuthenticated, isAdminOrStaff, router]);
 
   if (isLoading) {
     return (
@@ -28,11 +30,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  if (!isAuthenticated || !isAdmin) {
+  if (!isAuthenticated || !isAdminOrStaff) {
     return null;
   }
-
-  console.log(1323333);
 
   return <div className="min-h-screen bg-[#0D1117] text-white">{children}</div>;
 }

@@ -1,4 +1,5 @@
 import axios, { AxiosRequestConfig } from "axios";
+import { AUTH_REQUIRED_EVENT } from "@/lib/auth-events";
 
 // Extend AxiosRequestConfig to include custom properties
 declare module "axios" {
@@ -19,13 +20,14 @@ export const apiClient = axios.create({
   withCredentials: true,
 });
 
+const STATUS_BAD_REQUEST = 400;
+const STATUS_UNAUTHORIZED = 401;
+
 // ── Request interceptor ───────────────────────────────────────────────────────
-// Không cần đọc localStorage nữa — cookie được browser tự gửi
 apiClient.interceptors.request.use((config) => config);
 
 // ── Response interceptor — Silent Refresh ─────────────────────────────────────
 let isRefreshing = false;
-// Hàng đợi các request bị chặn trong khi đang refresh token
 let failedQueue: Array<{
   resolve: (value?: unknown) => void;
   reject: (reason?: unknown) => void;
@@ -47,14 +49,13 @@ apiClient.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
 
-    // Nếu nhận 401 và chưa retry và không phải chính endpoint refresh
+    // 1. Handle Token Expiration (401)
     if (
-      error.response?.status === 401 &&
+      error.response?.status === STATUS_UNAUTHORIZED &&
       !originalRequest._retry &&
       !originalRequest.url?.includes("/api/v1/auth/refresh")
     ) {
       if (isRefreshing) {
-        // Đang có refresh khác chạy — xếp hàng chờ
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         }).then(() => apiClient(originalRequest));
@@ -67,54 +68,53 @@ apiClient.interceptors.response.use(
         await apiClient.post("/api/v1/auth/refresh");
         processQueue(null);
         return apiClient(originalRequest);
-      } catch (refreshError: any) {
+      } catch (refreshError: unknown) {
         processQueue(refreshError);
-        
-        // Nếu lỗi 400 (thường là do thiếu Cookie) hoặc 401 (Token hết hạn thực sự)
-        // QUAN TRỌNG: Axios error không expose .status trực tiếp — phải dùng .response?.status
-        const isAuthError = refreshError?.response?.status === 400 || refreshError?.response?.status === 401;
+
+        const axiosRefreshError = refreshError as { response?: { status?: number } };
+        const isAuthError =
+          axiosRefreshError?.response?.status === STATUS_BAD_REQUEST ||
+          axiosRefreshError?.response?.status === STATUS_UNAUTHORIZED;
 
         if (typeof window !== "undefined") {
           const path = window.location.pathname;
-          const isAuthPage = path === "/auth/login" || path === "/auth/register" || path.startsWith("/auth/");
-          
+          const isAuthPage =
+            path === "/auth/login" || path === "/auth/register" || path.startsWith("/auth/");
+
           if (!isAuthPage && isAuthError) {
             if (originalRequest.skipAuthModal) {
               window.location.href = "/auth/login";
             } else {
               window.dispatchEvent(
-                new CustomEvent("AUTH_REQUIRED", {
-                  detail: { message: "Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại để tiếp tục." },
-                })
+                new CustomEvent(AUTH_REQUIRED_EVENT, {
+                  detail: {
+                    message: "Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại để tiếp tục.",
+                  },
+                }),
               );
             }
           }
         }
-        return Promise.reject(buildApiError(refreshError));
+        return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
       }
     }
 
-    return Promise.reject(buildApiError(error));
-  }
+    // 2. Handle Global Security Events (Account Locked)
+    const data = error.response?.data;
+    if (typeof data === "object" && data !== null && "code" in data) {
+      if (data.code === "AUTH_001") {
+        // ACCOUNT_LOCKED
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("ACCOUNT_LOCKED_EVENT"));
+        }
+        // Block further execution by returning a pending promise
+        return new Promise(() => {});
+      }
+    }
+
+    // 3. Fallback: Reject all other errors to be handled by the caller
+    return Promise.reject(error);
+  },
 );
-
-
-function buildApiError(error: unknown) {
-  const axiosErr = error as {
-    response?: { data?: { message?: string; data?: unknown }; status?: number };
-    message?: string;
-  };
-  const responseData = axiosErr?.response?.data;
-  const message = responseData?.message || axiosErr?.message || "Đã có lỗi xảy ra";
-  const errors = responseData?.data;
-
-  console.error("API Error:", { message, errors });
-
-  return {
-    message,
-    errors: errors && typeof errors === "object" ? errors : null,
-    status: axiosErr?.response?.status,
-  };
-}

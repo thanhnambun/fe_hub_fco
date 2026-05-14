@@ -1,4 +1,3 @@
-/* eslint-disable check-file/filename-naming-convention -- 按页面组件规范保留 PascalCase 文件名 */
 "use client";
 
 import Link from "next/link";
@@ -9,13 +8,12 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { authService } from "@/services/auth-service";
 import { toast } from "sonner";
-import UserDropdown from "./UserDropdown";
+import UserDropdown from "./user-dropdown";
 
 type NavItem = {
   label: string;
   href: string;
 };
-
 const NAV_ITEMS: NavItem[] = [
   { label: "Cầu thủ", href: "/players" },
   { label: "Đội hình", href: "/squad-builder" },
@@ -27,7 +25,7 @@ export function Navbar() {
   const pathname = usePathname();
   const queryClient = useQueryClient();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { profile, isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
 
   const activePath = useMemo(() => pathname ?? "", [pathname]);
 
@@ -41,7 +39,6 @@ export function Navbar() {
   const linkClassName = (href: string) =>
     `text-sm transition-colors ${isActive(href) ? "text-[#00FF85]" : "text-white/80 hover:text-[#00FF85]"}`;
 
-  // Dùng cho mobile menu logout (desktop delegate cho UserDropdown)
   const handleLogout = async () => {
     try {
       await authService.logout();
@@ -57,7 +54,10 @@ export function Navbar() {
     <header className="sticky top-0 z-50 border-b border-gray-800 bg-[#0A0E1A]/80 backdrop-blur-md">
       <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-4 md:px-6">
         <div className="flex items-center gap-8">
-          <Link href="/" className="font-[var(--font-oswald)] text-xl tracking-[0.18em] text-[#00FF85]">
+          <Link
+            href="/"
+            className="font-[var(--font-oswald)] text-xl tracking-[0.18em] text-[#00FF85]"
+          >
             FCO HUB
           </Link>
 
@@ -73,7 +73,10 @@ export function Navbar() {
         <div className="hidden items-center gap-4 md:flex">
           {!isLoading && !isAuthenticated ? (
             <>
-              <Link href="/auth/login" className="text-sm text-white/85 transition-colors hover:text-[#00FF85]">
+              <Link
+                href="/auth/login"
+                className="text-sm text-white/85 transition-colors hover:text-[#00FF85]"
+              >
                 Đăng nhập
               </Link>
               <Link

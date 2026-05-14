@@ -1,18 +1,20 @@
 import type { Metadata } from "next";
 import { Inter, Oswald } from "next/font/google";
 import "./globals.css";
-import AppProvider from "@/providers/AppProvider";
+import AppProvider from "@/providers/app-provider";
 import { Toaster } from "sonner";
-import GlobalAuthListener from "@/components/auth/GlobalAuthListener";
+import GlobalAuthListener from "@/components/auth/global-auth-listener";
+import WebSocketListener from "@/components/auth/websocket-listener";
+import { LockedAccountModal } from "@/components/locked-account-modal";
 
 const inter = Inter({
   variable: "--font-inter",
-  subsets: ["latin"],
+  subsets: ["latin", "vietnamese"],
 });
 
 const oswald = Oswald({
   variable: "--font-oswald",
-  subsets: ["latin"],
+  subsets: ["latin", "vietnamese"],
 });
 
 export const metadata: Metadata = {
@@ -32,6 +34,8 @@ export default function RootLayout({
           {children}
           <Toaster position="top-right" richColors />
           <GlobalAuthListener />
+          <WebSocketListener />
+          <LockedAccountModal />
         </AppProvider>
       </body>
     </html>

@@ -53,12 +53,16 @@ interface ApiResponse<T> {
 export const authService = {
   login: async (payload: LoginPayload): Promise<AuthResponse> => {
     const response = await apiClient.post<ApiResponse<AuthResponse>>("/api/v1/auth/login", payload);
+    localStorage.removeItem("fco_hub_force_logout");
     // Cookie được set bởi backend — không cần làm gì thêm
     return response.data.data;
   },
 
   register: async (payload: RegisterPayload): Promise<AuthResponse> => {
-    const response = await apiClient.post<ApiResponse<AuthResponse>>("/api/v1/auth/register", payload);
+    const response = await apiClient.post<ApiResponse<AuthResponse>>(
+      "/api/v1/auth/register",
+      payload,
+    );
     return response.data.data;
   },
 
@@ -84,8 +88,8 @@ export const authService = {
     return response.data;
   },
 
-  changePassword: async (payload: ChangePasswordPayload): Promise<{message: string}> => {
-    const response = await apiClient.put<{message: string}>("/api/v1/users/password", payload);
+  changePassword: async (payload: ChangePasswordPayload): Promise<{ message: string }> => {
+    const response = await apiClient.put<{ message: string }>("/api/v1/users/password", payload);
     return response.data;
   },
 };

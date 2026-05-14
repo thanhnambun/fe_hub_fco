@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import type { PlayerDetailResponse } from "@/types/player-api";
-import { Info } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface PlayerTraitsListProps {
@@ -34,7 +33,10 @@ export function PlayerTraitsList({ traits }: PlayerTraitsListProps) {
                   <span className="text-xs font-semibold text-white/90">{trait.traitName}</span>
                 </div>
               </TooltipTrigger>
-              <TooltipContent side="top" className="max-w-[250px] border-white/10 bg-black/90 p-3 text-white backdrop-blur-md">
+              <TooltipContent
+                side="top"
+                className="max-w-[250px] border-white/10 bg-black/90 p-3 text-white backdrop-blur-md"
+              >
                 <p className="text-xs leading-relaxed">{trait.description}</p>
               </TooltipContent>
             </Tooltip>

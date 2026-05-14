@@ -9,13 +9,15 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { authService } from "@/services/auth-service";
-import { GuestGuard } from "@/components/auth/GuestGuard";
+import { GuestGuard } from "@/components/auth/guest-guard";
+
+const NEW_PASSWORD_MIN_LENGTH = 8;
 
 const resetPasswordSchema = z
   .object({
     newPassword: z
       .string()
-      .min(8, "Mật khẩu phải có ít nhất 8 ký tự")
+      .min(NEW_PASSWORD_MIN_LENGTH, `Mật khẩu phải có ít nhất ${NEW_PASSWORD_MIN_LENGTH} ký tự`)
       .regex(/^(?=.*[A-Za-z])(?=.*\d).+$/, "Mật khẩu phải chứa ít nhất 1 chữ và 1 số"),
     confirmPassword: z.string().min(1, "Vui lòng xác nhận mật khẩu"),
   })
@@ -70,7 +72,10 @@ function ResetPasswordContent() {
       <div className="flex min-h-[calc(100vh-80px)] items-center justify-center p-6">
         <div className="w-full max-w-md rounded-2xl border border-red-500/30 bg-red-500/10 p-8 text-center text-red-300 backdrop-blur-md">
           <p className="text-base font-semibold">Token không hợp lệ hoặc bị thiếu.</p>
-          <Link href="/auth/forgot-password" className="mt-4 inline-block font-semibold text-[#00FF85] hover:underline">
+          <Link
+            href="/auth/forgot-password"
+            className="mt-4 inline-block font-semibold text-[#00FF85] hover:underline"
+          >
             Gửi lại yêu cầu quên mật khẩu
           </Link>
         </div>
@@ -85,7 +90,9 @@ function ResetPasswordContent() {
           <h1 className="font-[var(--font-oswald)] text-3xl font-bold tracking-wider text-[#00FF85]">
             ĐẶT LẠI MẬT KHẨU
           </h1>
-          <p className="mt-2 text-sm text-white/60">Nhập mật khẩu mới để tiếp tục sử dụng tài khoản</p>
+          <p className="mt-2 text-sm text-white/60">
+            Nhập mật khẩu mới để tiếp tục sử dụng tài khoản
+          </p>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
@@ -99,11 +106,15 @@ function ResetPasswordContent() {
                 type="password"
                 placeholder="Mật khẩu mới"
                 className={`w-full rounded-xl border py-3 pl-10 pr-4 text-sm text-white placeholder-white/40 outline-none transition focus:bg-white/10 ${
-                  errors.newPassword ? "border-red-500 bg-red-500/10" : "border-white/10 bg-white/5 focus:border-[#00FF85]"
+                  errors.newPassword
+                    ? "border-red-500 bg-red-500/10"
+                    : "border-white/10 bg-white/5 focus:border-[#00FF85]"
                 }`}
               />
             </div>
-            {errors.newPassword && <p className="pl-1 text-xs font-medium text-red-400">{errors.newPassword.message}</p>}
+            {errors.newPassword && (
+              <p className="pl-1 text-xs font-medium text-red-400">{errors.newPassword.message}</p>
+            )}
           </div>
 
           <div className="flex flex-col gap-1">
@@ -123,7 +134,9 @@ function ResetPasswordContent() {
               />
             </div>
             {errors.confirmPassword && (
-              <p className="pl-1 text-xs font-medium text-red-400">{errors.confirmPassword.message}</p>
+              <p className="pl-1 text-xs font-medium text-red-400">
+                {errors.confirmPassword.message}
+              </p>
             )}
           </div>
 

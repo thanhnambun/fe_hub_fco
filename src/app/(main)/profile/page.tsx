@@ -23,17 +23,23 @@ const profileSchema = z.object({
     .max(FULL_NAME_MAX, `Họ tên tối đa ${FULL_NAME_MAX} ký tự`),
   phone: z
     .string()
-    .regex(/^$|^0[35789]\d{8}$/, "Số điện thoại không hợp lệ (Phải bắt đầu bằng 03, 05, 07, 08, 09 và gồm 10 số)")
+    .max(PHONE_MAX, `Số điện thoại tối đa ${PHONE_MAX} ký tự`)
+    .regex(
+      /^$|^0[35789]\d{8}$/,
+      "Số điện thoại không hợp lệ (Phải bắt đầu bằng 03, 05, 07, 08, 09 và gồm 10 số)",
+    )
     .optional()
     .or(z.literal("")),
 });
+
+const NEW_PASSWORD_MIN_LENGTH = 8;
 
 const passwordSchema = z
   .object({
     oldPassword: z.string().min(1, "Vui lòng nhập mật khẩu cũ"),
     newPassword: z
       .string()
-      .min(8, "Mật khẩu mới phải từ 8 ký tự")
+      .min(NEW_PASSWORD_MIN_LENGTH, `Mật khẩu mới phải từ ${NEW_PASSWORD_MIN_LENGTH} ký tự`)
       .regex(/^(?=.*[A-Za-z])(?=.*\d).+$/, "Mật khẩu mới phải chứa ít nhất 1 chữ cái và 1 chữ số"),
     confirmPassword: z.string().min(1, "Vui lòng xác nhận mật khẩu"),
   })
@@ -147,7 +153,9 @@ export default function ProfilePage() {
         <h1 className="font-[var(--font-oswald)] text-3xl font-bold tracking-wider text-[#00FF85]">
           QUẢN LÝ TÀI KHOẢN
         </h1>
-        <p className="mt-2 text-sm text-white/60">Cập nhật thông tin cá nhân và bảo mật tài khoản của bạn.</p>
+        <p className="mt-2 text-sm text-white/60">
+          Cập nhật thông tin cá nhân và bảo mật tài khoản của bạn.
+        </p>
       </div>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
@@ -157,7 +165,7 @@ export default function ProfilePage() {
             <h2 className="mb-6 font-[var(--font-oswald)] text-xl font-bold tracking-wider text-[#00FF85]">
               HỒ SƠ CÁ NHÂN
             </h2>
-            
+
             <div className="mb-6 space-y-3 rounded-xl border border-white/10 bg-black/20 p-4 text-sm">
               <div className="flex items-center gap-2 text-white/70">
                 <AtSign size={16} className="shrink-0 text-white/40" />
@@ -173,7 +181,10 @@ export default function ProfilePage() {
 
             <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
               <div className="flex flex-col gap-1">
-                <label htmlFor="fullName" className="text-xs font-medium uppercase tracking-wide text-white/50">
+                <label
+                  htmlFor="fullName"
+                  className="text-xs font-medium uppercase tracking-wide text-white/50"
+                >
                   Họ và tên
                 </label>
                 <div className="relative">
@@ -186,7 +197,9 @@ export default function ProfilePage() {
                     type="text"
                     autoComplete="name"
                     className={`w-full rounded-xl border py-3 pl-10 pr-4 text-sm text-white placeholder-white/40 outline-none transition focus:bg-white/10 ${
-                      errors.fullName ? "border-red-500 bg-red-500/10" : "border-white/10 bg-white/5 focus:border-[#00FF85]"
+                      errors.fullName
+                        ? "border-red-500 bg-red-500/10"
+                        : "border-white/10 bg-white/5 focus:border-[#00FF85]"
                     }`}
                     placeholder="Nhập họ tên"
                   />
@@ -197,7 +210,10 @@ export default function ProfilePage() {
               </div>
 
               <div className="flex flex-col gap-1">
-                <label htmlFor="phone" className="text-xs font-medium uppercase tracking-wide text-white/50">
+                <label
+                  htmlFor="phone"
+                  className="text-xs font-medium uppercase tracking-wide text-white/50"
+                >
                   Số điện thoại
                 </label>
                 <div className="relative">
@@ -210,12 +226,16 @@ export default function ProfilePage() {
                     type="tel"
                     autoComplete="tel"
                     className={`w-full rounded-xl border py-3 pl-10 pr-4 text-sm text-white placeholder-white/40 outline-none transition focus:bg-white/10 ${
-                      errors.phone ? "border-red-500 bg-red-500/10" : "border-white/10 bg-white/5 focus:border-[#00FF85]"
+                      errors.phone
+                        ? "border-red-500 bg-red-500/10"
+                        : "border-white/10 bg-white/5 focus:border-[#00FF85]"
                     }`}
                     placeholder="Ví dụ: 0912345678"
                   />
                 </div>
-                {errors.phone ? <p className="pl-1 text-xs font-medium text-red-400">{errors.phone.message}</p> : null}
+                {errors.phone ? (
+                  <p className="pl-1 text-xs font-medium text-red-400">{errors.phone.message}</p>
+                ) : null}
               </div>
 
               <button
@@ -241,7 +261,10 @@ export default function ProfilePage() {
             </h2>
             <form onSubmit={handleSubmitPassword(onSubmitPassword)} className="flex flex-col gap-5">
               <div className="flex flex-col gap-1">
-                <label htmlFor="oldPassword" className="text-xs font-medium uppercase tracking-wide text-white/50">
+                <label
+                  htmlFor="oldPassword"
+                  className="text-xs font-medium uppercase tracking-wide text-white/50"
+                >
                   Mật khẩu cũ
                 </label>
                 <div className="relative">
@@ -253,16 +276,25 @@ export default function ProfilePage() {
                     {...registerPassword("oldPassword")}
                     type="password"
                     className={`w-full rounded-xl border py-3 pl-10 pr-4 text-sm text-white placeholder-white/40 outline-none transition focus:bg-white/10 ${
-                      passwordErrors.oldPassword ? "border-red-500 bg-red-500/10" : "border-white/10 bg-white/5 focus:border-[#00FF85]"
+                      passwordErrors.oldPassword
+                        ? "border-red-500 bg-red-500/10"
+                        : "border-white/10 bg-white/5 focus:border-[#00FF85]"
                     }`}
                     placeholder="Nhập mật khẩu hiện tại"
                   />
                 </div>
-                {passwordErrors.oldPassword && <p className="pl-1 text-xs font-medium text-red-400">{passwordErrors.oldPassword.message}</p>}
+                {passwordErrors.oldPassword && (
+                  <p className="pl-1 text-xs font-medium text-red-400">
+                    {passwordErrors.oldPassword.message}
+                  </p>
+                )}
               </div>
 
               <div className="flex flex-col gap-1">
-                <label htmlFor="newPassword" className="text-xs font-medium uppercase tracking-wide text-white/50">
+                <label
+                  htmlFor="newPassword"
+                  className="text-xs font-medium uppercase tracking-wide text-white/50"
+                >
                   Mật khẩu mới
                 </label>
                 <div className="relative">
@@ -274,16 +306,25 @@ export default function ProfilePage() {
                     {...registerPassword("newPassword")}
                     type="password"
                     className={`w-full rounded-xl border py-3 pl-10 pr-4 text-sm text-white placeholder-white/40 outline-none transition focus:bg-white/10 ${
-                      passwordErrors.newPassword ? "border-red-500 bg-red-500/10" : "border-white/10 bg-white/5 focus:border-[#00FF85]"
+                      passwordErrors.newPassword
+                        ? "border-red-500 bg-red-500/10"
+                        : "border-white/10 bg-white/5 focus:border-[#00FF85]"
                     }`}
                     placeholder="Ít nhất 8 ký tự, 1 chữ, 1 số"
                   />
                 </div>
-                {passwordErrors.newPassword && <p className="pl-1 text-xs font-medium text-red-400">{passwordErrors.newPassword.message}</p>}
+                {passwordErrors.newPassword && (
+                  <p className="pl-1 text-xs font-medium text-red-400">
+                    {passwordErrors.newPassword.message}
+                  </p>
+                )}
               </div>
 
               <div className="flex flex-col gap-1">
-                <label htmlFor="confirmPassword" className="text-xs font-medium uppercase tracking-wide text-white/50">
+                <label
+                  htmlFor="confirmPassword"
+                  className="text-xs font-medium uppercase tracking-wide text-white/50"
+                >
                   Xác nhận mật khẩu mới
                 </label>
                 <div className="relative">
@@ -295,12 +336,18 @@ export default function ProfilePage() {
                     {...registerPassword("confirmPassword")}
                     type="password"
                     className={`w-full rounded-xl border py-3 pl-10 pr-4 text-sm text-white placeholder-white/40 outline-none transition focus:bg-white/10 ${
-                      passwordErrors.confirmPassword ? "border-red-500 bg-red-500/10" : "border-white/10 bg-white/5 focus:border-[#00FF85]"
+                      passwordErrors.confirmPassword
+                        ? "border-red-500 bg-red-500/10"
+                        : "border-white/10 bg-white/5 focus:border-[#00FF85]"
                     }`}
                     placeholder="Nhập lại mật khẩu mới"
                   />
                 </div>
-                {passwordErrors.confirmPassword && <p className="pl-1 text-xs font-medium text-red-400">{passwordErrors.confirmPassword.message}</p>}
+                {passwordErrors.confirmPassword && (
+                  <p className="pl-1 text-xs font-medium text-red-400">
+                    {passwordErrors.confirmPassword.message}
+                  </p>
+                )}
               </div>
 
               <button
@@ -320,7 +367,10 @@ export default function ProfilePage() {
       </div>
 
       <div className="text-center mt-4">
-        <Link href="/" className="text-[#00FF85] text-sm hover:underline flex items-center justify-center gap-2">
+        <Link
+          href="/"
+          className="text-[#00FF85] text-sm hover:underline flex items-center justify-center gap-2"
+        >
           <span>&larr;</span> Quay lại trang chủ
         </Link>
       </div>

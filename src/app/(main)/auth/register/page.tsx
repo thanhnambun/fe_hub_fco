@@ -9,19 +9,36 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { useState } from "react";
-import { GuestGuard } from "@/components/auth/GuestGuard";
+import { GuestGuard } from "@/components/auth/guest-guard";
+import {
+  applyServerFieldErrors,
+  extractRegisterFieldErrors,
+  getRegisterErrorToastMessage,
+} from "@/lib/register-api-error";
+
+const FULL_NAME_MAX = 120;
+const USERNAME_MIN = 4;
+const USERNAME_MAX = 50;
+const PHONE_MAX = 20;
+const PASSWORD_MIN = 8;
+const PASSWORD_MAX = 64;
+const TOAST_DELAY = 2000;
 
 // --- Zod Schema (khớp CHÍNH XÁC với RegisterRequest.java) ---
 const registerSchema = z.object({
   fullName: z
     .string()
     .min(1, { message: "Họ tên không được để trống" })
-    .max(120, { message: "Họ tên tối đa 120 ký tự" }),
+    .max(FULL_NAME_MAX, { message: `Họ tên tối đa ${FULL_NAME_MAX} ký tự` }),
 
   username: z
     .string()
-    .min(4, { message: "Tên đăng nhập phải từ 4 đến 50 ký tự" })
-    .max(50, { message: "Tên đăng nhập phải từ 4 đến 50 ký tự" }),
+    .min(USERNAME_MIN, {
+      message: `Tên đăng nhập phải từ ${USERNAME_MIN} đến ${USERNAME_MAX} ký tự`,
+    })
+    .max(USERNAME_MAX, {
+      message: `Tên đăng nhập phải từ ${USERNAME_MIN} đến ${USERNAME_MAX} ký tự`,
+    }),
 
   email: z
     .string()
@@ -30,14 +47,14 @@ const registerSchema = z.object({
 
   phone: z
     .string()
-    .max(20, { message: "Số điện thoại tối đa 20 ký tự" })
+    .max(PHONE_MAX, { message: `Số điện thoại tối đa ${PHONE_MAX} ký tự` })
     .optional()
     .or(z.literal("")),
 
   password: z
     .string()
-    .min(8, { message: "Mật khẩu phải từ 8 đến 64 ký tự" })
-    .max(64, { message: "Mật khẩu phải từ 8 đến 64 ký tự" })
+    .min(PASSWORD_MIN, { message: `Mật khẩu phải từ ${PASSWORD_MIN} đến ${PASSWORD_MAX} ký tự` })
+    .max(PASSWORD_MAX, { message: `Mật khẩu phải từ ${PASSWORD_MIN} đến ${PASSWORD_MAX} ký tự` })
     .regex(/^(?=.*[A-Za-z])(?=.*\d).+$/, {
       message: "Mật khẩu phải chứa ít nhất 1 chữ cái và 1 chữ số",
     }),
@@ -47,12 +64,10 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 
 // --- Helper component: Input Field ---
 function FormField({
-  label,
   icon,
   error,
   children,
 }: {
-  label?: string;
   icon: React.ReactNode;
   error?: string;
   children: React.ReactNode;
@@ -99,19 +114,14 @@ export default function RegisterPage() {
 
       setSuccess(true);
       toast.success("Đăng ký thành công! Đang chuyển hướng...");
-      setTimeout(() => router.push("/auth/login"), 2000);
-    } catch (err: any) {
-      // Nếu backend trả về field errors (vd: username đã tồn tại)
-      if (err?.errors && typeof err.errors === "object") {
-        Object.entries(err.errors).forEach(([field, message]) => {
-          setError(field as keyof RegisterFormValues, {
-            type: "server",
-            message: message as string,
-          });
-        });
+      setTimeout(() => router.push("/auth/login"), TOAST_DELAY);
+    } catch (err: unknown) {
+      const fieldErrors = extractRegisterFieldErrors(err);
+      if (fieldErrors) {
+        applyServerFieldErrors(fieldErrors, setError);
       }
-      // Luôn hiện toast với message chung
-      toast.error(err?.message || "Đăng ký thất bại. Vui lòng kiểm tra lại.");
+      const fallback = "Đăng ký thất bại. Vui lòng kiểm tra lại.";
+      toast.error(getRegisterErrorToastMessage(err, fallback));
     }
   };
 
@@ -119,89 +129,89 @@ export default function RegisterPage() {
     <GuestGuard>
       <div className="flex min-h-[calc(100vh-80px)] items-center justify-center p-6 py-12">
         <div className="w-full max-w-md rounded-2xl border border-white/10 bg-white/5 p-8 shadow-2xl backdrop-blur-md">
-        <div className="mb-8 text-center">
-          <h1 className="font-[var(--font-oswald)] text-3xl font-bold tracking-wider text-[#00FF85]">
-            TẠO TÀI KHOẢN
-          </h1>
-          <p className="mt-2 text-sm text-white/60">Gia nhập cộng đồng người chơi xuất sắc</p>
-        </div>
-
-        {success ? (
-          <div className="flex flex-col items-center justify-center space-y-4 py-8 text-center">
-            <BadgeCheck size={64} className="text-[#00FF85]" />
-            <h2 className="text-xl font-bold text-white">Đăng ký thành công!</h2>
-            <p className="text-sm text-white/60">Đang chuyển hướng đến trang đăng nhập...</p>
+          <div className="mb-8 text-center">
+            <h1 className="font-[var(--font-oswald)] text-3xl font-bold tracking-wider text-[#00FF85]">
+              TẠO TÀI KHOẢN
+            </h1>
+            <p className="mt-2 text-sm text-white/60">Gia nhập cộng đồng người chơi xuất sắc</p>
           </div>
-        ) : (
-          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-            {/* Họ và tên */}
-            <FormField icon={<User size={18} />} error={errors.fullName?.message}>
-              <input
-                {...register("fullName")}
-                type="text"
-                placeholder="Họ và tên"
-                className={inputClass(!!errors.fullName)}
-              />
-            </FormField>
 
-            {/* Username */}
-            <FormField icon={<User size={18} />} error={errors.username?.message}>
-              <input
-                {...register("username")}
-                type="text"
-                placeholder="Tên đăng nhập (4-50 ký tự)"
-                className={inputClass(!!errors.username)}
-              />
-            </FormField>
+          {success ? (
+            <div className="flex flex-col items-center justify-center space-y-4 py-8 text-center">
+              <BadgeCheck size={64} className="text-[#00FF85]" />
+              <h2 className="text-xl font-bold text-white">Đăng ký thành công!</h2>
+              <p className="text-sm text-white/60">Đang chuyển hướng đến trang đăng nhập...</p>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+              {/* Họ và tên */}
+              <FormField icon={<User size={18} />} error={errors.fullName?.message}>
+                <input
+                  {...register("fullName")}
+                  type="text"
+                  placeholder="Họ và tên"
+                  className={inputClass(!!errors.fullName)}
+                />
+              </FormField>
 
-            {/* Email */}
-            <FormField icon={<Mail size={18} />} error={errors.email?.message}>
-              <input
-                {...register("email")}
-                type="email"
-                placeholder="Địa chỉ Email"
-                className={inputClass(!!errors.email)}
-              />
-            </FormField>
+              {/* Username */}
+              <FormField icon={<User size={18} />} error={errors.username?.message}>
+                <input
+                  {...register("username")}
+                  type="text"
+                  placeholder="Tên đăng nhập (4-50 ký tự)"
+                  className={inputClass(!!errors.username)}
+                />
+              </FormField>
 
-            {/* Phone */}
-            <FormField icon={<Phone size={18} />} error={errors.phone?.message}>
-              <input
-                {...register("phone")}
-                type="tel"
-                placeholder="Số điện thoại (không bắt buộc)"
-                className={inputClass(!!errors.phone)}
-              />
-            </FormField>
+              {/* Email */}
+              <FormField icon={<Mail size={18} />} error={errors.email?.message}>
+                <input
+                  {...register("email")}
+                  type="email"
+                  placeholder="Địa chỉ Email"
+                  className={inputClass(!!errors.email)}
+                />
+              </FormField>
 
-            {/* Password */}
-            <FormField icon={<Lock size={18} />} error={errors.password?.message}>
-              <input
-                {...register("password")}
-                type="password"
-                placeholder="Mật khẩu (ít nhất 8 ký tự, 1 chữ cái, 1 số)"
-                className={inputClass(!!errors.password)}
-              />
-            </FormField>
+              {/* Phone */}
+              <FormField icon={<Phone size={18} />} error={errors.phone?.message}>
+                <input
+                  {...register("phone")}
+                  type="tel"
+                  placeholder="Số điện thoại (không bắt buộc)"
+                  className={inputClass(!!errors.phone)}
+                />
+              </FormField>
 
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="mt-2 flex items-center justify-center rounded-xl bg-[#00FF85] py-3 font-bold text-black transition-all hover:shadow-[0_0_15px_rgba(0,255,133,0.5)] disabled:cursor-not-allowed disabled:opacity-70"
-            >
-              {isSubmitting ? <Loader2 className="animate-spin" size={20} /> : "ĐĂNG KÝ"}
-            </button>
-          </form>
-        )}
+              {/* Password */}
+              <FormField icon={<Lock size={18} />} error={errors.password?.message}>
+                <input
+                  {...register("password")}
+                  type="password"
+                  placeholder="Mật khẩu (ít nhất 8 ký tự, 1 chữ cái, 1 số)"
+                  className={inputClass(!!errors.password)}
+                />
+              </FormField>
 
-        <p className="mt-6 text-center text-sm text-white/60">
-          Đã có tài khoản?{" "}
-          <Link href="/auth/login" className="font-semibold text-[#00FF85] hover:underline">
-            Đăng nhập ngay
-          </Link>
-        </p>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="mt-2 flex items-center justify-center rounded-xl bg-[#00FF85] py-3 font-bold text-black transition-all hover:shadow-[0_0_15px_rgba(0,255,133,0.5)] disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {isSubmitting ? <Loader2 className="animate-spin" size={20} /> : "ĐĂNG KÝ"}
+              </button>
+            </form>
+          )}
+
+          <p className="mt-6 text-center text-sm text-white/60">
+            Đã có tài khoản?{" "}
+            <Link href="/auth/login" className="font-semibold text-[#00FF85] hover:underline">
+              Đăng nhập ngay
+            </Link>
+          </p>
+        </div>
       </div>
-    </div>
     </GuestGuard>
   );
 }

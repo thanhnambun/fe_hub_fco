@@ -1,16 +1,24 @@
-'use client'
+"use client";
 
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts'
+import {
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Area,
+  AreaChart,
+} from "recharts";
 
 const efficiencyData = [
-  { time: '00:00', load: 35 },
-  { time: '04:00', load: 42 },
-  { time: '08:00', load: 68 },
-  { time: '12:00', load: 85 },
-  { time: '16:00', load: 72 },
-  { time: '20:00', load: 55 },
-  { time: '23:59', load: 38 },
-]
+  { time: "00:00", load: 35 },
+  { time: "04:00", load: 42 },
+  { time: "08:00", load: 68 },
+  { time: "12:00", load: 85 },
+  { time: "16:00", load: 72 },
+  { time: "20:00", load: 55 },
+  { time: "23:59", load: 38 },
+];
 
 export function SystemEfficiency() {
   return (
@@ -41,15 +49,15 @@ export function SystemEfficiency() {
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#2a3240" />
-              <XAxis dataKey="time" stroke="#a0a8b3" style={{ fontSize: '12px' }} />
-              <YAxis stroke="#a0a8b3" style={{ fontSize: '12px' }} />
+              <XAxis dataKey="time" stroke="#a0a8b3" style={{ fontSize: "12px" }} />
+              <YAxis stroke="#a0a8b3" style={{ fontSize: "12px" }} />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: '#1a1f2e',
-                  border: '1px solid #d4af37',
-                  borderRadius: '8px',
+                  backgroundColor: "#1a1f2e",
+                  border: "1px solid #d4af37",
+                  borderRadius: "8px",
                 }}
-                cursor={{ stroke: '#d4af37', strokeWidth: 2 }}
+                cursor={{ stroke: "#d4af37", strokeWidth: 2 }}
               />
               <Area
                 type="monotone"
@@ -84,5 +92,5 @@ export function SystemEfficiency() {
         </div>
       </div>
     </div>
-  )
+  );
 }
