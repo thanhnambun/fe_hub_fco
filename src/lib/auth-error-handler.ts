@@ -1,6 +1,6 @@
 import axios, { AxiosError } from "axios";
 import { toast } from "sonner";
-import { ApiClientError, isApiErrorResponse } from "@/types/api-error";
+import { ApiClientError, isApiErrorResponse, normalizeApiErrorBody } from "@/types/api-error";
 import { ACCOUNT_LOCKED_EVENT } from "@/components/locked-account-modal";
 
 /**
@@ -25,6 +25,20 @@ export function handleAuthError(error: unknown): ApiClientError {
       });
       break;
 
+    case "AUTH_005": // TOKEN_BLACKLISTED / logged out
+      toast.error(apiError.message, {
+        description: "Phiên đăng nhập đã kết thúc.",
+      });
+      break;
+
+    case "AUTH_006": // RATE_LIMITED
+      toast.warning(apiError.message);
+      break;
+
+    case "CARD_001": // player card not found (detail API)
+      toast.error(apiError.message);
+      break;
+
     case "SYST_001": // SYSTEM_ERROR
       toast.error("Lỗi hệ thống", {
         description: apiError.message,
@@ -46,11 +60,12 @@ function parseAxiosError(error: unknown): ApiClientError {
   if (error instanceof AxiosError && error.response) {
     const data = error.response.data;
     if (isApiErrorResponse(data)) {
+      const n = normalizeApiErrorBody(data);
       return {
-        code: data.code,
-        message: data.message,
+        code: n.code,
+        message: n.message,
         status: error.response.status,
-        details: data.details,
+        details: n.details,
       };
     }
   }

@@ -1,5 +1,5 @@
 import type { FieldValues, Path, UseFormSetError } from "react-hook-form";
-import { isAxiosApiError } from "@/types/api-error";
+import { isAxiosApiError, normalizeApiErrorBody } from "@/types/api-error";
 
 /** Field đăng ký mà backend có thể trả lỗi validation — khớp RegisterRequest / form. */
 export const REGISTER_FIELD_KEYS = ["fullName", "username", "email", "phone", "password"] as const;
@@ -17,13 +17,14 @@ export function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 export function extractRegisterFieldErrors(err: unknown): RegisterFieldErrors | null {
-  if (!isAxiosApiError(err) || !err.response?.data.details) return null;
-  const details = err.response.data.details;
-  if (!isRecord(details)) return null;
+  if (!isAxiosApiError(err)) return null;
+  const n = normalizeApiErrorBody(err.response.data);
+  const raw = n.details;
+  if (!raw || !isRecord(raw)) return null;
 
   // Convert Record<string, unknown> to Record<string, string>
   const errors: RegisterFieldErrors = {};
-  for (const [key, value] of Object.entries(details)) {
+  for (const [key, value] of Object.entries(raw)) {
     errors[key] = String(value);
   }
   return errors;
@@ -41,7 +42,7 @@ export function applyServerFieldErrors<T extends FieldValues>(
 
 export function getRegisterErrorToastMessage(err: unknown, fallback: string): string {
   if (isAxiosApiError(err)) {
-    return err.response?.data.message || fallback;
+    return normalizeApiErrorBody(err.response.data).message || fallback;
   }
   if (err instanceof Error && err.message.length > 0) {
     return err.message;
