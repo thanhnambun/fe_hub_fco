@@ -1,4 +1,4 @@
-import axios, { AxiosError } from "axios";
+import axios, { AxiosError, AxiosResponse } from "axios";
 
 /** Danh sách mã lỗi contract-first — đồng bộ với com.fco.platform.common.exception.ErrorCode */
 export const API_ERROR_CODES = [
@@ -106,8 +106,8 @@ export function normalizeApiErrorBody(
   };
 }
 
-export function isAxiosApiError(error: unknown): error is AxiosError<ApiErrorResponse> {
-  return (
-    axios.isAxiosError(error) && error.response !== null && isApiErrorResponse(error.response.data)
-  );
+export function isAxiosApiError(
+  error: unknown,
+): error is AxiosError<ApiErrorResponse> & { response: AxiosResponse<ApiErrorResponse> } {
+  return axios.isAxiosError(error) && !!error.response && isApiErrorResponse(error.response.data);
 }
