@@ -5,6 +5,7 @@ import type { PlayerDetailResponse } from "@/types/player-api";
 import { PlayerDetailHero } from "./player-detail-hero";
 import { PlayerStatsRadar } from "./player-stats-radar";
 import { PlayerPriceTable } from "./player-price-table";
+import { PlayerReviewsTab } from "./player-reviews-tab";
 import Image from "next/image";
 import { baseOvrAtGrade1, cumulativeOvrBonusFromGrade1 } from "@/lib/enhance-grade-ovr";
 import { Calendar, Scale, Ruler, Flag, HelpCircle } from "lucide-react";
@@ -170,7 +171,9 @@ function getStatValueColor(val: number) {
 export function PlayerDetailContainer({ player }: PlayerDetailContainerProps) {
   const storedLevel = Math.min(13, Math.max(1, player.enhanceLevel ?? 1));
   const [grade, setGrade] = useState(storedLevel);
-  const [activeTab, setActiveTab] = useState<"traits" | "info" | "price" | "clubs">("traits");
+  const [activeTab, setActiveTab] = useState<"traits" | "info" | "price" | "clubs" | "reviews">(
+    "traits",
+  );
 
   // Compute base stats at Grade 1
   const baseStats = useMemo(() => {
@@ -458,13 +461,16 @@ export function PlayerDetailContainer({ player }: PlayerDetailContainerProps) {
             { id: "info", label: "INFO" },
             { id: "price", label: "PRICE" },
             { id: "clubs", label: "Club Career", count: player.clubs?.length },
+            { id: "reviews", label: "CỘNG ĐỒNG" },
           ].map((tab) => {
             const active = activeTab === tab.id;
             return (
               <button
                 key={tab.id}
                 type="button"
-                onClick={() => setActiveTab(tab.id as "traits" | "info" | "price" | "clubs")}
+                onClick={() =>
+                  setActiveTab(tab.id as "traits" | "info" | "price" | "clubs" | "reviews")
+                }
                 className={`px-5 py-2.5 text-xs font-black uppercase tracking-wider rounded-t-lg transition border-t-2 border-x ${
                   active
                     ? "bg-[#00FF85]/10 border-t-[#00FF85] border-x-white/10 text-white font-extrabold"
@@ -657,6 +663,9 @@ export function PlayerDetailContainer({ player }: PlayerDetailContainerProps) {
             </div>
           )}
         </div>
+
+        {/* E. Reviews Tab (Community Insight) */}
+        {activeTab === "reviews" && <PlayerReviewsTab cardId={player.id} />}
       </div>
     </div>
   );
