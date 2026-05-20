@@ -1,6 +1,11 @@
 import axios, { AxiosError } from "axios";
 import { toast } from "sonner";
-import { ApiClientError, isApiErrorResponse, normalizeApiErrorBody } from "@/types/api-error";
+import {
+  ApiClientError,
+  isApiErrorResponse,
+  normalizeApiErrorBody,
+  ErrorCode,
+} from "@/types/api-error";
 import { ACCOUNT_LOCKED_EVENT } from "@/components/locked-account-modal";
 
 /**
@@ -67,6 +72,21 @@ function parseAxiosError(error: unknown): ApiClientError {
         status: error.response.status,
         details: n.details,
       };
+    }
+
+    // Dynamic extraction fallback for non-strict error formats
+    if (data && typeof data === "object") {
+      const msg =
+        (data as { detail?: string; message?: string }).detail ||
+        (data as { detail?: string; message?: string }).message;
+      if (msg) {
+        return {
+          code: (data as { errorCode?: ErrorCode }).errorCode || "SYST_001",
+          message: msg,
+          status: error.response.status,
+          details: (data as { errors?: Record<string, string> }).errors,
+        };
+      }
     }
   }
 

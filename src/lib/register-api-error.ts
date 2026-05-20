@@ -1,5 +1,4 @@
 import type { FieldValues, Path, UseFormSetError } from "react-hook-form";
-import { isAxiosApiError, normalizeApiErrorBody } from "@/types/api-error";
 
 /** Field đăng ký mà backend có thể trả lỗi validation — khớp RegisterRequest / form. */
 export const REGISTER_FIELD_KEYS = ["fullName", "username", "email", "phone", "password"] as const;
@@ -12,22 +11,22 @@ export function isRegisterServerFieldKey(key: string): key is RegisterServerFiel
 
 export type RegisterFieldErrors = Record<string, string>;
 
-export function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
 export function extractRegisterFieldErrors(err: unknown): RegisterFieldErrors | null {
-  if (!isAxiosApiError(err)) return null;
-  const n = normalizeApiErrorBody(err.response.data);
-  const raw = n.details;
-  if (!raw || !isRecord(raw)) return null;
-
-  // Convert Record<string, unknown> to Record<string, string>
-  const errors: RegisterFieldErrors = {};
-  for (const [key, value] of Object.entries(raw)) {
-    errors[key] = String(value);
+  if (err && typeof err === "object" && "response" in err) {
+    const response = (err as { response?: { data?: unknown } }).response;
+    const data = response?.data;
+    if (data && typeof data === "object") {
+      const errors = (data as { errors?: Record<string, unknown> }).errors;
+      if (errors && typeof errors === "object") {
+        const result: RegisterFieldErrors = {};
+        for (const [key, value] of Object.entries(errors)) {
+          result[key] = String(value);
+        }
+        return result;
+      }
+    }
   }
-  return errors;
+  return null;
 }
 
 export function applyServerFieldErrors<T extends FieldValues>(
@@ -41,9 +40,28 @@ export function applyServerFieldErrors<T extends FieldValues>(
 }
 
 export function getRegisterErrorToastMessage(err: unknown, fallback: string): string {
-  if (isAxiosApiError(err)) {
-    return normalizeApiErrorBody(err.response.data).message || fallback;
+  if (err && typeof err === "object" && "response" in err) {
+    const response = (err as { response?: { data?: unknown } }).response;
+    const data = response?.data;
+    if (data && typeof data === "object") {
+      // 1. Try to extract specific field errors
+      const errors = (data as { errors?: Record<string, unknown> }).errors;
+      if (errors && typeof errors === "object") {
+        const fieldErrors = Object.values(errors);
+        if (fieldErrors.length > 0) {
+          return String(fieldErrors[0]);
+        }
+      }
+      // 2. Try to extract general detail
+      const detail = (data as { detail?: string }).detail;
+      if (detail) return detail;
+
+      // 3. Try to extract legacy message
+      const message = (data as { message?: string }).message;
+      if (message) return message;
+    }
   }
+
   if (err instanceof Error && err.message.length > 0) {
     return err.message;
   }

@@ -1,16 +1,14 @@
 "use client";
 
 import Image from "next/image";
-import { useMemo, useState } from "react";
 import type { PlayerDetailResponse } from "@/types/player-api";
 import { Shield, Sparkles, User, Flag, Users } from "lucide-react";
-import {
-  baseOvrAtGrade1,
-  cumulativeOvrBonusFromGrade1,
-} from "@/lib/enhance-grade-ovr";
 
 interface PlayerDetailHeroProps {
   player: PlayerDetailResponse;
+  grade: number;
+  setGrade: (grade: number) => void;
+  displayOvr: number;
 }
 
 const GOLD = "#FFD700";
@@ -18,20 +16,8 @@ const GRADE_LABEL = "#3d2914";
 const GRADE_BTN = "rgba(201, 166, 107, 0.85)";
 const GRADES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13] as const;
 
-
-export function PlayerDetailHero({ player }: PlayerDetailHeroProps) {
+export function PlayerDetailHero({ player, grade, setGrade, displayOvr }: PlayerDetailHeroProps) {
   const storedLevel = Math.min(13, Math.max(1, player.enhanceLevel ?? 1));
-  const [grade, setGrade] = useState(storedLevel);
-
-  const baseGrade1 = useMemo(
-    () => baseOvrAtGrade1(player.ovr ?? 0, player.enhanceLevel),
-    [player.ovr, player.enhanceLevel]
-  );
-
-  const displayOvr = useMemo(() => {
-    const raw = baseGrade1 + cumulativeOvrBonusFromGrade1(grade);
-    return Math.min(255, Math.max(0, Math.round(raw)));
-  }, [baseGrade1, grade]);
 
   return (
     <div className="relative flex w-full flex-col overflow-hidden rounded-3xl border border-white/10 bg-slate-950 shadow-2xl">
@@ -87,8 +73,11 @@ export function PlayerDetailHero({ player }: PlayerDetailHeroProps) {
             <div className="flex items-center gap-2 rounded-2xl border border-[#FFD700]/30 bg-black/40 px-5 py-3 backdrop-blur-md">
               <Sparkles className="h-5 w-5 text-[#FFD700]/80" />
               <span className="text-sm font-bold uppercase text-white/50">OVR</span>
-              <span className="fco-heading text-3xl font-black leading-none" style={{ color: GOLD }}>
-                {player.ovr != null ? displayOvr : "—"}
+              <span
+                className="fco-heading text-3xl font-black leading-none"
+                style={{ color: GOLD }}
+              >
+                {displayOvr}
               </span>
             </div>
             <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-5 py-3 backdrop-blur-md">
@@ -104,7 +93,9 @@ export function PlayerDetailHero({ player }: PlayerDetailHeroProps) {
           <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-white/70 md:justify-start">
             <div className="flex items-center gap-1.5">
               <User className="h-4 w-4 opacity-50" />
-              <span>{player.height}cm, {player.weight}kg</span>
+              <span>
+                {player.height}cm, {player.weight}kg
+              </span>
             </div>
             <div className="flex items-center gap-1.5">
               <Flag className="h-4 w-4 opacity-50" />
@@ -112,7 +103,9 @@ export function PlayerDetailHero({ player }: PlayerDetailHeroProps) {
             </div>
             <div className="flex items-center gap-1.5">
               <span className="opacity-50">Chân:</span>
-              <span className="font-medium text-white">{player.preferredFoot} {player.weakFoot}-5</span>
+              <span className="font-medium text-white">
+                {player.preferredFoot} {player.weakFoot}-5
+              </span>
             </div>
           </div>
 
@@ -121,7 +114,10 @@ export function PlayerDetailHero({ player }: PlayerDetailHeroProps) {
             <div className="mt-6 flex flex-wrap items-center justify-center gap-2 md:justify-start">
               <Users className="mr-2 h-4 w-4 text-white/40" />
               {player.clubs.slice(0, 5).map((club, idx) => (
-                <div key={idx} className="flex items-center gap-1.5 rounded-full border border-white/5 bg-white/5 px-3 py-1">
+                <div
+                  key={idx}
+                  className="flex items-center gap-1.5 rounded-full border border-white/5 bg-white/5 px-3 py-1"
+                >
                   {club.crestUrl && (
                     <Image
                       src={club.crestUrl}
@@ -203,7 +199,8 @@ export function PlayerDetailHero({ player }: PlayerDetailHeroProps) {
                   ))}
                 </div>
                 <p className="text-[11px] leading-snug text-white/45">
-                  OVR hiển thị = OVR mốc +1 + cộng dồn theo cấp (chỉ trên trang này). Thẻ API: +{storedLevel}.
+                  OVR hiển thị = OVR mốc +1 + cộng dồn theo cấp (chỉ trên trang này). Thẻ API: +
+                  {storedLevel}.
                 </p>
               </div>
             </div>

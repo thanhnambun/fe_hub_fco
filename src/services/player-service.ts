@@ -39,3 +39,11 @@ export async function getPlayerById(id: number) {
   >(`/api/v1/players/${id}`);
   return response.data.data;
 }
+
+export async function getSeasons() {
+  const response =
+    await apiClient.get<
+      ResponseWrapper<Array<{ id: number; seasonCode: string; seasonName: string }>>
+    >("/api/v1/players/seasons");
+  return response.data.data;
+}

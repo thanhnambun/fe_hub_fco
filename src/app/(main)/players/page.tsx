@@ -5,7 +5,7 @@ import { Suspense } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PlayerCard } from "@/components/features/players/player-card";
-import { getPlayers } from "@/services/player-service";
+import { getPlayers, getSeasons } from "@/services/player-service";
 
 const PAGE_SIZE = 10;
 
@@ -25,21 +25,6 @@ const POSITIONS = [
   "LWB",
   "RWB",
   "GK",
-];
-const SEASONS = [
-  "LE",
-  "ICON",
-  "22UCL",
-  "23UCL",
-  "HW",
-  "CAP",
-  "BTB",
-  "UP",
-  "LN",
-  "SPL",
-  "MC",
-  "VTR",
-  "LH",
 ];
 
 function PlayerCardSkeleton() {
@@ -77,6 +62,11 @@ function PlayersContent() {
 
   const minPrice = minPriceStr ? parseInt(minPriceStr, 10) : undefined;
   const maxPrice = maxPriceStr ? parseInt(maxPriceStr, 10) : undefined;
+
+  const { data: seasonsList } = useQuery({
+    queryKey: ["public", "seasons"],
+    queryFn: () => getSeasons(),
+  });
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["players", page, keyword, seasonCode, position, minPrice, maxPrice],
@@ -164,9 +154,9 @@ function PlayersContent() {
               className="w-full rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm text-white outline-none transition focus:border-[#00FF85] focus:bg-white/10 [&>option]:bg-[#0A0E1A] [&>option]:text-white"
             >
               <option value="">Tất cả mùa</option>
-              {SEASONS.map((s) => (
-                <option key={s} value={s}>
-                  {s}
+              {seasonsList?.map((s) => (
+                <option key={s.id} value={s.seasonCode}>
+                  {s.seasonCode} - {s.seasonName}
                 </option>
               ))}
             </select>

@@ -31,6 +31,7 @@ import {
 import { adminUserService } from "@/services/admin-user-service";
 import { UserResponse, PaginationResponse, AdminUserUpdateRequest } from "@/types/admin-user";
 import { toast } from "sonner";
+import { getErrorMessage } from "@/lib/utils";
 import { UserEditModal } from "@/components/admin/user-edit-modal";
 import { ConfirmActionModal } from "@/components/admin/confirm-action-modal";
 import { useAuth } from "@/hooks/use-auth";
@@ -62,8 +63,7 @@ export default function AdminUsersPage() {
       const result = await adminUserService.getUsers(page, PAGE_SIZE, search);
       setData(result);
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Không thể tải danh sách người dùng";
-      toast.error(message);
+      toast.error(getErrorMessage(error, "Không thể tải danh sách người dùng"));
     } finally {
       setIsLoading(false);
     }
@@ -103,8 +103,7 @@ export default function AdminUsersPage() {
       setIsEditModalOpen(false);
       fetchUsers();
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Cập nhật thất bại";
-      toast.error(message);
+      toast.error(getErrorMessage(error, "Cập nhật thất bại"));
     } finally {
       setIsProcessing(false);
     }
@@ -119,8 +118,7 @@ export default function AdminUsersPage() {
       setIsStatusModalOpen(false);
       fetchUsers();
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Thao tác thất bại";
-      toast.error(message);
+      toast.error(getErrorMessage(error, "Thao tác thất bại"));
     } finally {
       setIsProcessing(false);
     }
