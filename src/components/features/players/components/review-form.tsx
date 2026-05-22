@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Send } from "lucide-react";
 import { submitReview } from "@/services/review-service";
 import type { ReviewResponse } from "@/types/review";
+import { getErrorMessage } from "@/lib/utils";
 
 const INGAME_RANKS = ["Thách Đấu", "Cao Thủ", "Huyền Thoại", "Tinh Anh", "Vàng", "Bạc", "Đồng"];
 
@@ -39,10 +40,7 @@ export function ReviewForm({ cardId, onSubmitted }: ReviewFormProps) {
       setIngameRank("");
       toast.success("Đăng đánh giá thành công!");
     } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ??
-        "Không thể gửi đánh giá. Vui lòng thử lại.";
-      toast.error(msg);
+      toast.error(getErrorMessage(err, "Không thể gửi đánh giá. Vui lòng thử lại."));
     } finally {
       setIsSubmitting(false);
     }

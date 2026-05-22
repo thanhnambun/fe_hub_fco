@@ -5,6 +5,7 @@ import { AUTH_REQUIRED_EVENT } from "@/lib/auth-events";
 declare module "axios" {
   export interface AxiosRequestConfig {
     skipAuthModal?: boolean;
+    silentAuth?: boolean;
   }
 }
 
@@ -53,7 +54,9 @@ apiClient.interceptors.response.use(
     if (
       error.response?.status === STATUS_UNAUTHORIZED &&
       !originalRequest._retry &&
-      !originalRequest.url?.includes("/api/v1/auth/refresh")
+      !originalRequest.url?.includes("/api/v1/auth/refresh") &&
+      !originalRequest.url?.includes("/api/v1/auth/login") &&
+      !originalRequest.url?.includes("/api/v1/auth/register")
     ) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
@@ -81,7 +84,7 @@ apiClient.interceptors.response.use(
           const isAuthPage =
             path === "/auth/login" || path === "/auth/register" || path.startsWith("/auth/");
 
-          if (!isAuthPage && isAuthError) {
+          if (!isAuthPage && isAuthError && !originalRequest.silentAuth) {
             if (originalRequest.skipAuthModal) {
               window.location.href = "/auth/login";
             } else {

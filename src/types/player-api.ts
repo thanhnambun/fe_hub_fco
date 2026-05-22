@@ -64,6 +64,11 @@ export interface PlayerDetailResponse extends PlayerCardItem {
   clubs: ClubResponse[];
   traits: TraitResponse[];
   prices: PriceResponse[];
+
+  // Card-level vote
+  ngonCount: number;
+  pheCount: number;
+  currentUserVote: "NGON" | "PHE" | null;
 }
 
 export interface PageResponse<T> {

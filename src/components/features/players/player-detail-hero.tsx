@@ -3,6 +3,8 @@
 import Image from "next/image";
 import type { PlayerDetailResponse } from "@/types/player-api";
 import { Shield, Sparkles, User, Flag, Users } from "lucide-react";
+import { PlayerCardVoteBar } from "./player-card-vote-bar";
+import { useAuth } from "@/hooks/use-auth";
 
 interface PlayerDetailHeroProps {
   player: PlayerDetailResponse;
@@ -18,6 +20,7 @@ const GRADES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13] as const;
 
 export function PlayerDetailHero({ player, grade, setGrade, displayOvr }: PlayerDetailHeroProps) {
   const storedLevel = Math.min(13, Math.max(1, player.enhanceLevel ?? 1));
+  const { isAuthenticated } = useAuth();
 
   return (
     <div className="relative flex w-full flex-col overflow-hidden rounded-3xl border border-white/10 bg-slate-950 shadow-2xl">
@@ -88,6 +91,15 @@ export function PlayerDetailHero({ player, grade, setGrade, displayOvr }: Player
               </span>
             </div>
           </div>
+
+          {/* === Card Vote Bar === */}
+          <PlayerCardVoteBar
+            cardId={player.id!}
+            initialNgon={player.ngonCount ?? 0}
+            initialPhe={player.pheCount ?? 0}
+            initialUserVote={player.currentUserVote ?? null}
+            isAuthenticated={isAuthenticated}
+          />
 
           {/* Bio info */}
           <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-white/70 md:justify-start">

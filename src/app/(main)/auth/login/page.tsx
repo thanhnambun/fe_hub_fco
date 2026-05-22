@@ -10,6 +10,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { GuestGuard } from "@/components/auth/guest-guard";
+import { handleAuthError } from "@/lib/auth-error-handler";
 
 // --- Zod Schema (khớp với LoginRequest.java) ---
 const loginSchema = z.object({
@@ -18,15 +19,6 @@ const loginSchema = z.object({
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
-
-const getErrorMessage = (error: unknown): string => {
-  if (typeof error === "object" && error !== null && "message" in error) {
-    return String(
-      (error as { message?: string }).message ?? "Đăng nhập thất bại. Vui lòng thử lại.",
-    );
-  }
-  return "Đăng nhập thất bại. Vui lòng thử lại.";
-};
 
 export default function LoginPage() {
   const router = useRouter();
@@ -48,7 +40,7 @@ export default function LoginPage() {
       toast.success("Đăng nhập thành công! Chào mừng trở lại 🎉");
       router.push("/");
     } catch (error: unknown) {
-      toast.error(getErrorMessage(error));
+      handleAuthError(error);
     }
   };
 

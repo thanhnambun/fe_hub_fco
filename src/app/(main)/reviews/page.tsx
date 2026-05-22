@@ -8,12 +8,14 @@ import Link from "next/link";
 import { ThumbsUp, ThumbsDown, Loader2, Users } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { vi } from "date-fns/locale";
+import { getErrorMessage } from "@/lib/utils";
 
 export default function ReviewsPage() {
   const [reviews, setReviews] = useState<RecentReviewResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function loadPage(p: number) {
     setIsLoading(true);
@@ -23,6 +25,10 @@ export default function ReviewsPage() {
       else setReviews((prev) => [...prev, ...data.items]);
       setHasMore(data.hasNext);
       setPage(p);
+      setError(null);
+    } catch (err) {
+      console.error("Failed to load recent reviews:", err);
+      setError(getErrorMessage(err, "Không thể tải danh sách đánh giá. Vui lòng thử lại."));
     } finally {
       setIsLoading(false);
     }
@@ -53,6 +59,16 @@ export default function ReviewsPage() {
       {isLoading && page === 0 ? (
         <div className="flex justify-center py-20">
           <Loader2 className="h-8 w-8 animate-spin text-[#00FF85]/40" />
+        </div>
+      ) : error ? (
+        <div className="py-20 text-center">
+          <p className="text-red-400 font-medium mb-4">{error}</p>
+          <button
+            onClick={() => loadPage(0)}
+            className="rounded-xl border border-red-500/30 bg-red-500/10 px-6 py-2.5 text-xs font-bold text-red-300 transition hover:bg-red-500/20 active:scale-95"
+          >
+            Tải lại trang
+          </button>
         </div>
       ) : (
         <>
@@ -93,7 +109,7 @@ function RecentReviewCard({ review }: { review: RecentReviewResponse }) {
 
   return (
     <Link
-      href={`/players/${review.cardId}?tab=reviews`}
+      href={`/players/${review.cardId}#reviews`}
       className="group block rounded-2xl border border-white/[0.07] bg-white/[0.02] p-4 transition hover:border-white/15 hover:bg-white/[0.04]"
     >
       {/* Player mini card header */}

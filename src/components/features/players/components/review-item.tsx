@@ -8,6 +8,7 @@ import { vi } from "date-fns/locale";
 import { toggleVote, deleteReview } from "@/services/review-service";
 import type { ReviewResponse } from "@/types/review";
 import { ReplyList } from "./reply-list";
+import { getErrorMessage } from "@/lib/utils";
 
 interface ReviewItemProps {
   review: ReviewResponse;
@@ -66,8 +67,8 @@ export function ReviewItem({
       setPhe(result.pheCount);
       setCurrentVote(result.currentUserVote);
       onVoteUpdate(review.id, result.ngonCount, result.pheCount, result.currentUserVote);
-    } catch {
-      toast.error("Không thể bình chọn. Vui lòng thử lại.");
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, "Không thể bình chọn. Vui lòng thử lại."));
     } finally {
       setIsVoting(false);
     }
@@ -80,8 +81,8 @@ export function ReviewItem({
       await deleteReview(review.id);
       onDeleted(review.id);
       toast.success("Đã xóa đánh giá.");
-    } catch {
-      toast.error("Không thể xóa đánh giá.");
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, "Không thể xóa đánh giá. Vui lòng thử lại."));
     } finally {
       setIsDeleting(false);
     }
@@ -139,38 +140,40 @@ export function ReviewItem({
 
       {/* Actions */}
       <div className="flex items-center gap-3">
-        {/* NGON vote */}
+        {/* Like vote */}
         <button
           onClick={() => handleVote("NGON")}
           disabled={isVoting}
-          className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-black uppercase tracking-wider transition select-none
+          className={`flex items-center gap-1 px-2.5 py-1 rounded-lg border text-[11px] font-medium transition select-none
             ${voted === "NGON" ? "scale-95" : "scale-100"}
             ${
               currentVote === "NGON"
-                ? "border-[#00FF85]/40 bg-[#00FF85]/15 text-[#00FF85] shadow-[0_0_12px_rgba(0,255,133,0.2)]"
-                : "border-white/10 bg-white/[0.03] text-white/50 hover:border-[#00FF85]/30 hover:text-[#00FF85]"
+                ? "border-[#00FF85]/40 bg-[#00FF85]/10 text-[#00FF85]"
+                : "border-white/5 bg-white/[0.02] text-white/40 hover:border-white/20 hover:text-white/80"
             }`}
           style={{ transition: "all 0.15s ease" }}
+          title="Bình luận hữu ích"
         >
-          <ThumbsUp className="h-3.5 w-3.5" />
-          NGON <span className="font-mono">{ngon}</span>
+          <ThumbsUp className="h-3 w-3" />
+          <span className="font-mono">{ngon}</span>
         </button>
 
-        {/* PHE vote */}
+        {/* Dislike vote */}
         <button
           onClick={() => handleVote("PHE")}
           disabled={isVoting}
-          className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-black uppercase tracking-wider transition select-none
+          className={`flex items-center gap-1 px-2.5 py-1 rounded-lg border text-[11px] font-medium transition select-none
             ${voted === "PHE" ? "scale-95" : "scale-100"}
             ${
               currentVote === "PHE"
-                ? "border-red-400/40 bg-red-400/15 text-red-400 shadow-[0_0_12px_rgba(248,113,113,0.2)]"
-                : "border-white/10 bg-white/[0.03] text-white/50 hover:border-red-400/30 hover:text-red-400"
+                ? "border-red-400/40 bg-red-400/10 text-red-400"
+                : "border-white/5 bg-white/[0.02] text-white/40 hover:border-white/20 hover:text-white/80"
             }`}
           style={{ transition: "all 0.15s ease" }}
+          title="Bình luận không hữu ích"
         >
-          <ThumbsDown className="h-3.5 w-3.5" />
-          PHE <span className="font-mono">{phe}</span>
+          <ThumbsDown className="h-3 w-3" />
+          <span className="font-mono">{phe}</span>
         </button>
 
         {/* Reply toggle */}

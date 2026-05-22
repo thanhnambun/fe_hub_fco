@@ -8,8 +8,23 @@ import type {
   ReplyRequest,
   VoteRequest,
   ReplyResponse,
+  CardVoteRequest,
+  CardVoteResponse,
 } from "@/types/review";
 import type { PageResponse, ResponseWrapper } from "@/types/player-api";
+
+// ── Card-level Vote (NGON / PHE trực tiếp trên thẻ cầu thủ) ──────────────────
+
+export async function toggleCardVote(
+  cardId: number,
+  request: CardVoteRequest,
+): Promise<CardVoteResponse> {
+  const res = await apiClient.post<ResponseWrapper<CardVoteResponse>>(
+    `/api/v1/cards/${cardId}/card-vote`,
+    request,
+  );
+  return res.data.data;
+}
 
 // ── Card Reviews ──────────────────────────────────────────────────────────────
 

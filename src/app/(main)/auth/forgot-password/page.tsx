@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Mail, Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -9,20 +10,17 @@ import { toast } from "sonner";
 import { authService } from "@/services/auth-service";
 import { GuestGuard } from "@/components/auth/guest-guard";
 
+import { getErrorMessage } from "@/lib/utils";
+
 const forgotPasswordSchema = z.object({
   email: z.string().email("Email không hợp lệ"),
 });
 
 type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
 
-const getErrorMessage = (error: unknown): string => {
-  if (typeof error === "object" && error !== null && "message" in error) {
-    return String((error as { message?: string }).message ?? "Không thể gửi yêu cầu lúc này.");
-  }
-  return "Không thể gửi yêu cầu lúc này.";
-};
-
 export default function ForgotPasswordPage() {
+  const router = useRouter();
+
   const {
     register,
     handleSubmit,
@@ -34,9 +32,10 @@ export default function ForgotPasswordPage() {
   const onSubmit = async ({ email }: ForgotPasswordFormValues) => {
     try {
       await authService.forgotPassword(email);
-      toast.success("Nếu email tồn tại, thư hướng dẫn đã được gửi đi.");
+      toast.success("Mã OTP đã được gửi vào email của bạn. Vui lòng kiểm tra hộp thư.");
+      router.push(`/auth/reset-password?email=${encodeURIComponent(email)}`);
     } catch (error: unknown) {
-      toast.error(getErrorMessage(error));
+      toast.error(getErrorMessage(error, "Không thể gửi yêu cầu lúc này."));
     }
   };
 
@@ -48,7 +47,9 @@ export default function ForgotPasswordPage() {
             <h1 className="font-[var(--font-oswald)] text-3xl font-bold tracking-wider text-[#00FF85]">
               QUÊN MẬT KHẨU
             </h1>
-            <p className="mt-2 text-sm text-white/60">Nhập email để nhận link đặt lại mật khẩu</p>
+            <p className="mt-2 text-sm text-white/60">
+              Nhập email — chúng tôi sẽ gửi mã xác nhận 6 chữ số
+            </p>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
@@ -78,11 +79,7 @@ export default function ForgotPasswordPage() {
               disabled={isSubmitting}
               className="mt-2 flex items-center justify-center rounded-xl bg-[#00FF85] py-3 font-bold text-black transition-all hover:shadow-[0_0_15px_rgba(0,255,133,0.5)] disabled:cursor-not-allowed disabled:opacity-70"
             >
-              {isSubmitting ? (
-                <Loader2 className="animate-spin" size={20} />
-              ) : (
-                "GỬI EMAIL KHÔI PHỤC"
-              )}
+              {isSubmitting ? <Loader2 className="animate-spin" size={20} /> : "GỬI MÃ XÁC NHẬN"}
             </button>
           </form>
 

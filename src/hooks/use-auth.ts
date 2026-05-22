@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/services/api-client";
+import axios from "axios";
 
 type RoleValue = string;
 
@@ -24,9 +25,18 @@ interface MeApiResponse {
   data: UserProfile;
 }
 
-async function fetchMe(): Promise<UserProfile> {
-  const response = await apiClient.get<MeApiResponse>("/api/v1/auth/me");
-  return response.data.data;
+async function fetchMe(): Promise<UserProfile | null> {
+  try {
+    const response = await apiClient.get<MeApiResponse>("/api/v1/auth/me", {
+      silentAuth: true,
+    });
+    return response.data.data;
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error) && error.response?.status === 401) {
+      return null;
+    }
+    throw error;
+  }
 }
 
 export function useAuth() {

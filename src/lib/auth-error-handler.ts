@@ -81,7 +81,9 @@ function parseAxiosError(error: unknown): ApiClientError {
         (data as { detail?: string; message?: string }).message;
       if (msg) {
         return {
-          code: (data as { errorCode?: ErrorCode }).errorCode || "SYST_001",
+          code:
+            (data as { errorCode?: ErrorCode }).errorCode ||
+            (error.response.status === 401 ? "AUTH_004" : "SYST_001"),
           message: msg,
           status: error.response.status,
           details: (data as { errors?: Record<string, string> }).errors,
@@ -90,10 +92,28 @@ function parseAxiosError(error: unknown): ApiClientError {
     }
   }
 
+  const status = axios.isAxiosError(error) ? error.response?.status || 500 : 500;
+
+  // Custom message mapping for network/unknown failures
+  let friendlyMessage = "Đã có lỗi xảy ra. Vui lòng thử lại sau.";
+  if (axios.isAxiosError(error)) {
+    if (!error.response) {
+      friendlyMessage = "Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại đường truyền mạng.";
+    } else if (status >= 500) {
+      friendlyMessage = "Hệ thống đang gặp sự cố. Vui lòng thử lại sau.";
+    } else if (status === 404) {
+      friendlyMessage = "Không tìm thấy tài nguyên yêu cầu.";
+    } else if (status === 403) {
+      friendlyMessage = "Bạn không có quyền truy cập tài nguyên này.";
+    } else if (status === 401) {
+      friendlyMessage = "Vui lòng đăng nhập để tiếp tục.";
+    }
+  }
+
   // Fallback for network errors or unknown formats
   return {
-    code: "SYST_001",
-    message: error instanceof Error ? error.message : "Đã có lỗi xảy ra",
-    status: axios.isAxiosError(error) ? error.response?.status || 500 : 500,
+    code: status === 401 ? "AUTH_004" : "SYST_001",
+    message: friendlyMessage,
+    status,
   };
 }

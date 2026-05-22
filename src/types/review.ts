@@ -65,3 +65,14 @@ export interface ReplyRequest {
 export interface VoteRequest {
   voteType: "NGON" | "PHE";
 }
+
+export interface CardVoteRequest {
+  voteType: "NGON" | "PHE";
+}
+
+export interface CardVoteResponse {
+  cardId: number;
+  ngonCount: number;
+  pheCount: number;
+  currentUserVote: "NGON" | "PHE" | null;
+}

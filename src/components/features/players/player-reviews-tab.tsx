@@ -8,6 +8,7 @@ import { AiInsightPanel } from "./components/ai-insight-panel";
 import { ReviewForm } from "./components/review-form";
 import { ReviewItem } from "./components/review-item";
 import { MessageSquareDashed, Loader2 } from "lucide-react";
+import { getErrorMessage } from "@/lib/utils";
 
 interface PlayerReviewsTabProps {
   cardId: number;
@@ -21,6 +22,7 @@ export function PlayerReviewsTab({ cardId }: PlayerReviewsTabProps) {
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(false);
   const [totalReviews, setTotalReviews] = useState(0);
+  const [error, setError] = useState<string | null>(null);
 
   const isAdmin = profile?.roles?.some((r) => ["ROLE_ADMIN", "ROLE_STAFF"].includes(r)) ?? false;
 
@@ -40,8 +42,9 @@ export function PlayerReviewsTab({ cardId }: PlayerReviewsTabProps) {
         setHasMore(data.hasNext);
         setTotalReviews(data.totalItems);
         setPage(p);
-      } catch {
-        // silent
+        setError(null);
+      } catch (err: unknown) {
+        setError(getErrorMessage(err, "Không thể tải danh sách đánh giá. Vui lòng thử lại."));
       } finally {
         setIsLoading(false);
       }
@@ -118,6 +121,16 @@ export function PlayerReviewsTab({ cardId }: PlayerReviewsTabProps) {
       {isLoading && page === 0 ? (
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-6 w-6 animate-spin text-[#00FF85]/50" />
+        </div>
+      ) : error ? (
+        <div className="py-12 text-center">
+          <p className="text-red-400 font-medium mb-4">{error}</p>
+          <button
+            onClick={() => loadReviews(0)}
+            className="rounded-xl border border-red-500/30 bg-red-500/10 px-6 py-2.5 text-xs font-bold text-red-300 transition hover:bg-red-500/20 active:scale-95"
+          >
+            Thử lại
+          </button>
         </div>
       ) : reviews.length === 0 ? (
         <div className="flex flex-col items-center gap-3 py-12 text-center">

@@ -7,6 +7,7 @@ import { addReply } from "@/services/review-service";
 import type { ReplyResponse } from "@/types/review";
 import { formatDistanceToNow } from "date-fns";
 import { vi } from "date-fns/locale";
+import { getErrorMessage } from "@/lib/utils";
 
 interface ReplyListProps {
   reviewId: number;
@@ -39,8 +40,8 @@ export function ReplyList({ reviewId, initialReplies, currentUsername }: ReplyLi
       const newReply = await addReply(reviewId, { content: replyText.trim() });
       setReplies((prev) => [...prev, newReply]);
       setReplyText("");
-    } catch {
-      toast.error("Không thể gửi phản hồi.");
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, "Không thể gửi phản hồi."));
     } finally {
       setIsSubmitting(false);
     }

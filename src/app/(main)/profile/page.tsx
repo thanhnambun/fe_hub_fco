@@ -10,6 +10,7 @@ import { z } from "zod";
 import { Loader2, User, Phone, Mail, AtSign, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
+import { getErrorMessage } from "@/lib/utils";
 import { authService } from "@/services/auth-service";
 
 /** Khớp validation backend UpdateProfileRequest */
@@ -50,13 +51,6 @@ const passwordSchema = z
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
 type PasswordFormValues = z.infer<typeof passwordSchema>;
-
-const getErrorMessage = (error: unknown): string => {
-  if (typeof error === "object" && error !== null && "message" in error) {
-    return String((error as { message?: string }).message ?? "Có lỗi xảy ra. Vui lòng thử lại.");
-  }
-  return "Có lỗi xảy ra. Vui lòng thử lại.";
-};
 
 export default function ProfilePage() {
   const router = useRouter();

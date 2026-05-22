@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import { PlayerCard } from "@/components/base/player-card";
 import { getPlayers } from "@/services/player-service";
+import { getErrorMessage } from "@/lib/utils";
 import type { PlayerCardItem } from "@/types/player-api";
 
 function SkeletonCard() {
@@ -30,7 +31,7 @@ export function PlayerSection() {
         setPlayers(pageData.items);
         setError(null);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Không thể tải dữ liệu cầu thủ.");
+        setError(getErrorMessage(err, "Không thể tải dữ liệu cầu thủ. Vui lòng thử lại sau."));
       } finally {
         setLoading(false);
       }
@@ -44,7 +45,9 @@ export function PlayerSection() {
       <div className="flex items-end justify-between">
         <div>
           <h2 className="fco-heading text-2xl font-semibold text-fco-gold">Phân tích cầu thủ</h2>
-          <p className="mt-2 text-sm text-white/75">Dữ liệu cầu thủ được đồng bộ từ scraper Python và backend Spring Boot.</p>
+          <p className="mt-2 text-sm text-white/75">
+            Dữ liệu cầu thủ được đồng bộ từ scraper Python và backend Spring Boot.
+          </p>
         </div>
       </div>
 
